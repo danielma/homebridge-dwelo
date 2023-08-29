@@ -30,6 +30,18 @@ export class DweloDimmerAccessory implements AccessoryPlugin {
         log.debug(`Switch state was set to: ${value ? 'ON' : 'OFF'}`);
       });
 
+    this.service.getCharacteristic(api.hap.Characteristic.Brightness)
+      .onGet(async () => {
+        const sensors = await dweloAPI.sensors(switchID);
+        const isOn = sensors[0]?.value === 'on';
+        log.debug(`Current state of the switch was returned: ${isOn ? 'ON' : 'OFF'}`);
+        return isOn;
+      })
+      .onSet(async value => {
+        await dweloAPI.setDimmer(switchID, value as number);
+        log.debug(`Switch dimmer was set to: ${value}`);
+      });
+
     log.info(`Dwelo Switch '${name} ' created!`);
   }
 

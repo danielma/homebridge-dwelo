@@ -69,6 +69,13 @@ export class DweloAPI {
     });
   }
 
+  public async setDimmer(id: number, percent: number) {
+    return this.request(`/v3/device/${id}/command/`, {
+      method: 'POST',
+      data: { 'command': 'Multilevel On', 'commandValue': percent.toString() },
+    });
+  }
+
   public async toggleLock(locked: boolean, id: number) {
     await this.request(`/v3/device/${id}/command/`, {
       method: 'POST',
