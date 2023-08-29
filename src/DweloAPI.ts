@@ -1,6 +1,4 @@
-
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-
 
 interface ListResponse {
   resultsCount: number;
@@ -40,43 +38,46 @@ interface ListSensorsResponse extends ListResponse {
 }
 
 type MobileLight = {
-  device_id: number
+  device_id: number;
   sensors: {
-    Percent?: number
-    Switch: 'On' | 'Off'
-  }
-}
+    Percent?: number;
+    Switch: 'On' | 'Off';
+  };
+};
 
-type MobileThermostat = {
-  device_id: number
+export type MobileThermostat = {
+  device_id: number;
   sensors: {
-    Humidity: number
+    Humidity: number;
     Temperature: {
-      unit: 'F' | 'C'
-      value: number
-    }
+      unit: 'F' | 'C';
+      value: number;
+    };
     ThermostatCoolSetpoint: {
-      unit: 'F' | 'C'
-      value: number
-    }
-    ThermostatFanMode: 'AutoLow' | 'ManualLow'
+      unit: 'F' | 'C';
+      value: number;
+    };
+    ThermostatFanMode: 'AutoLow' | 'ManualLow';
     ThermostatHeatSetpoint: {
-      unit: 'F' | 'C'
-      value: number
-    }
-    ThermostatMode: 'Auto' | 'Heat' | 'Cool' | 'Off'
-    ThermostatOperatingState: 'Idle'
-  }
-}
+      unit: 'F' | 'C';
+      value: number;
+    };
+    ThermostatMode: 'Auto' | 'Heat' | 'Cool' | 'Off';
+    ThermostatOperatingState: 'Idle';
+  };
+};
 
 type MobileDevices = {
-  GATEWAY: object
-  "LIGHTS AND SWITCHES": MobileLight[]
-  "THERMOSTATS": MobileThermostat[]
-}
+  GATEWAY: object;
+  'LIGHTS AND SWITCHES': MobileLight[];
+  THERMOSTATS: MobileThermostat[];
+};
 
 export class DweloAPI {
-  constructor(private readonly token: string, private readonly gatewayID: string) { }
+  constructor(
+    private readonly token: string,
+    private readonly gatewayID: string,
+  ) {}
 
   public async devices(): Promise<Device[]> {
     const response = await this.request<ListDevicesResponse>('/v3/device', {
@@ -90,51 +91,60 @@ export class DweloAPI {
   }
 
   public async sensors(deviceId: number): Promise<Sensor[]> {
-    const response = await this.request<ListSensorsResponse>(`/v3/sensor/gateway/${this.gatewayID}/`, {
-      params: {
-        deviceId,
+    const response = await this.request<ListSensorsResponse>(
+      `/v3/sensor/gateway/${this.gatewayID}/`,
+      {
+        params: {
+          deviceId,
+        },
       },
-    });
+    );
     return response.data.results;
   }
 
   public async mobileDevices(): Promise<MobileDevices> {
-    const response = await this.request<MobileDevices>(`/mobile/v1/devices/${this.gatewayID}/`)
+    const response = await this.request<MobileDevices>(
+      `/mobile/v1/devices/${this.gatewayID}/`,
+    );
 
-    return response.data
+    return response.data;
   }
 
   public async toggleSwitch(on: boolean, id: number) {
     return this.request(`/v3/device/${id}/command/`, {
       method: 'POST',
-      data: { 'command': on ? 'on' : 'off' },
+      data: { command: on ? 'on' : 'off' },
     });
   }
 
   public async setDimmer(id: number, percent: number) {
     return this.request(`/v3/device/${id}/command/`, {
       method: 'POST',
-      data: { 'command': 'Multilevel On', 'commandValue': percent.toString() },
+      data: { command: 'Multilevel On', commandValue: percent.toString() },
     });
   }
 
-  public async setThermostatMode(id: number, mode: MobileThermostat['sensors']['ThermostatMode']) {
+  public async setThermostatMode(
+    id: number,
+    mode: MobileThermostat['sensors']['ThermostatMode'],
+  ) {
     return this.request(`/v3/device/${id}/command/`, {
       method: 'POST',
-      data: { command: mode.toLocaleLowerCase() }
-    })
+      data: { command: mode.toLocaleLowerCase() },
+    });
   }
 
   public async toggleLock(locked: boolean, id: number) {
     await this.request(`/v3/device/${id}/command/`, {
       method: 'POST',
-      data: { 'command': locked ? 'lock' : 'unlock' },
+      data: { command: locked ? 'lock' : 'unlock' },
     });
 
     const target = locked ? 'locked' : 'unlocked';
     await poll({
       requestFn: () => this.sensors(id),
-      stopCondition: s => s.find(s => s.sensorType === 'lock')?.value === target,
+      stopCondition: (s) =>
+        s.find((s) => s.sensorType === 'lock')?.value === target,
       interval: 5000,
       timeout: 60 * 1000,
     });
@@ -158,7 +168,12 @@ export class DweloAPI {
   }
 }
 
-function poll<T>({ requestFn, stopCondition, interval, timeout }: {
+function poll<T>({
+  requestFn,
+  stopCondition,
+  interval,
+  timeout,
+}: {
   requestFn: () => Promise<T>;
   stopCondition: (response: T) => boolean;
   interval: number;
@@ -166,7 +181,10 @@ function poll<T>({ requestFn, stopCondition, interval, timeout }: {
 }): Promise<T> {
   let stop = false;
 
-  const executePoll = async (resolve: (r: T) => unknown, reject: (e: Error) => void) => {
+  const executePoll = async (
+    resolve: (r: T) => unknown,
+    reject: (e: Error) => void,
+  ) => {
     const result = await requestFn();
 
     let stopConditionalResult: boolean;

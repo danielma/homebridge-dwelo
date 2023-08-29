@@ -18,13 +18,16 @@ export class DweloLockAccessory implements AccessoryPlugin {
     private readonly api: API,
     private readonly dweloAPI: DweloAPI,
     public readonly name: string,
-    private readonly lockID: number) {
+    private readonly lockID: number,
+  ) {
     this.lockService = new api.hap.Service.LockMechanism(name);
 
-    this.lockService.getCharacteristic(api.hap.Characteristic.LockCurrentState)
+    this.lockService
+      .getCharacteristic(api.hap.Characteristic.LockCurrentState)
       .onGet(this.getLockState.bind(this));
 
-    this.lockService.getCharacteristic(api.hap.Characteristic.LockTargetState)
+    this.lockService
+      .getCharacteristic(api.hap.Characteristic.LockTargetState)
       .onGet(this.getTargetLockState.bind(this))
       .onSet(this.setTargetLockState.bind(this));
 
@@ -60,11 +63,13 @@ export class DweloLockAccessory implements AccessoryPlugin {
     this.log.info(`Setting lock to: ${value}`);
     await this.dweloAPI.toggleLock(!!value, this.lockID);
     this.log.info('Lock toggle completed');
-    this.lockService.getCharacteristic(this.api.hap.Characteristic.LockCurrentState).updateValue(value);
+    this.lockService
+      .getCharacteristic(this.api.hap.Characteristic.LockCurrentState)
+      .updateValue(value);
   }
 
   private toLockState(sensors: Sensor[]) {
-    const lockSensor = sensors.find(s => s.sensorType === 'lock');
+    const lockSensor = sensors.find((s) => s.sensorType === 'lock');
     if (!lockSensor) {
       return this.api.hap.Characteristic.LockCurrentState.UNKNOWN;
     }
@@ -74,18 +79,23 @@ export class DweloLockAccessory implements AccessoryPlugin {
   }
 
   private setBatteryLevel(sensors: Sensor[]) {
-    const batterySensor = sensors.find(s => s.sensorType === 'battery');
+    const batterySensor = sensors.find((s) => s.sensorType === 'battery');
     if (!batterySensor) {
       return;
     }
 
     const batteryLevel = parseInt(batterySensor.value, 10);
-    const batteryStatus = batteryLevel > 20
-      ? this.api.hap.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
-      : this.api.hap.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
+    const batteryStatus =
+      batteryLevel > 20
+        ? this.api.hap.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
+        : this.api.hap.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
 
-    this.batteryService.getCharacteristic(this.api.hap.Characteristic.BatteryLevel).updateValue(batteryLevel);
-    this.batteryService.getCharacteristic(this.api.hap.Characteristic.StatusLowBattery).updateValue(batteryStatus);
+    this.batteryService
+      .getCharacteristic(this.api.hap.Characteristic.BatteryLevel)
+      .updateValue(batteryLevel);
+    this.batteryService
+      .getCharacteristic(this.api.hap.Characteristic.StatusLowBattery)
+      .updateValue(batteryStatus);
 
     this.log.info('Lock battery: ', batteryLevel);
   }
