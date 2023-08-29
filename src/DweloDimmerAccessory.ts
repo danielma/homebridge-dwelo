@@ -17,12 +17,13 @@ export class DweloDimmerAccessory implements AccessoryPlugin {
     this.log = log;
     this.name = name;
 
-    this.service = new api.hap.Service.Switch(this.name);
+    this.service = new api.hap.Service.Lightbulb(this.name);
     this.service.getCharacteristic(api.hap.Characteristic.On)
       .onGet(async () => {
-        const sensors = await dweloAPI.sensors(switchID);
-        const isOn = sensors[0]?.value === 'on';
-        log.debug(`Current state of the switch was returned: ${isOn ? 'ON' : 'OFF'}`);
+        const { "LIGHTS AND SWITCHES": lights } = await dweloAPI.mobileDevices()
+        const light = lights.find(l => l.device_id === switchID)
+        const isOn = light?.sensors.Switch === 'On'
+        log.debug(`Current state of switch ${switchID} was returned: ${isOn ? 'ON' : 'OFF'}`);
         return isOn;
       })
       .onSet(async value => {
@@ -32,10 +33,11 @@ export class DweloDimmerAccessory implements AccessoryPlugin {
 
     this.service.getCharacteristic(api.hap.Characteristic.Brightness)
       .onGet(async () => {
-        const sensors = await dweloAPI.sensors(switchID);
-        const isOn = sensors[0]?.value === 'on';
-        log.debug(`Current state of the switch was returned: ${isOn ? 'ON' : 'OFF'}`);
-        return isOn;
+        const { "LIGHTS AND SWITCHES": lights } = await dweloAPI.mobileDevices()
+        const light = lights.find(l => l.device_id === switchID)
+        const percent = light?.sensors.Percent || 0
+
+        return percent > 98 ? 100 : percent
       })
       .onSet(async value => {
         await dweloAPI.setDimmer(switchID, value as number);

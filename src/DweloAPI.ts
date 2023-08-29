@@ -39,6 +39,19 @@ interface ListSensorsResponse extends ListResponse {
   results: Sensor[];
 }
 
+type MobileLight = {
+  device_id: number
+  sensors: {
+    Percent?: number
+    Switch: 'On' | 'Off'
+  }
+}
+
+type MobileDevices = {
+  GATEWAY: object
+  "LIGHTS AND SWITCHES": MobileLight[]
+}
+
 export class DweloAPI {
   constructor(private readonly token: string, private readonly gatewayID: string) { }
 
@@ -60,6 +73,12 @@ export class DweloAPI {
       },
     });
     return response.data.results;
+  }
+
+  public async mobileDevices(): Promise<MobileDevices> {
+    const response = await this.request<MobileDevices>(`/mobile/v1/devices/${this.gatewayID}/`)
+
+    return response.data
   }
 
   public async toggleSwitch(on: boolean, id: number) {
