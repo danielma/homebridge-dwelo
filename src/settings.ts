@@ -6,4 +6,4 @@ export const PLATFORM_NAME = 'HomebridgePluginDwelo';
 /**
  * This must match the name of your plugin as defined the package.json
  */
-export const PLUGIN_NAME = '@eduardoramirez/homebridge-dwelo';
+export const PLUGIN_NAME = '@danielma/homebridge-dwelo';
