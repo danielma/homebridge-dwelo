@@ -1,6 +1,6 @@
 import { AccessoryPlugin, API, Logging, Service } from 'homebridge';
 
-import { DweloAPI, MobileThermostat } from './DweloAPI';
+import { DweloAPI } from './DweloAPI';
 
 function fahrenheitToCelcius(f: number) {
   return (f - 32) / 1.8;
@@ -79,7 +79,24 @@ export class DweloThermostatAccessory implements AccessoryPlugin {
         return modeMap[thermostat.sensors.ThermostatMode];
       })
       .onSet(async (value) => {
-        await dweloAPI.setThermostatMode(deviceId, value as MobileThermostat['sensors']['ThermostatMode']);
+        const characteristic = api.hap.Characteristic.TargetHeatingCoolingState;
+
+        const nextMode = (() => {
+          switch (value as number) {
+            case characteristic.AUTO:
+              return 'Auto';
+            case characteristic.COOL:
+              return 'Cool';
+            case characteristic.HEAT:
+              return 'Heat';
+            case characteristic.OFF:
+              return 'Off';
+            default:
+              return 'Off';
+          }
+        })();
+
+        await dweloAPI.setThermostatMode(deviceId, nextMode);
       });
 
     this.service
