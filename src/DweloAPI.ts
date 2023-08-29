@@ -10,7 +10,7 @@ interface ListResponse {
 export interface Device {
   addressId: number;
   dateRegistered: string;
-  deviceType: 'lock' | 'switch';
+  deviceType: 'lock' | 'switch' | 'dimmer';
   device_metadata: Record<string, string>;
   gatewayId: string;
   givenName: string;
