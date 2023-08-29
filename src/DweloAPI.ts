@@ -10,7 +10,7 @@ interface ListResponse {
 export interface Device {
   addressId: number;
   dateRegistered: string;
-  deviceType: 'lock' | 'switch' | 'dimmer';
+  deviceType: 'lock' | 'switch' | 'dimmer' | 'thermostat';
   device_metadata: Record<string, string>;
   gatewayId: string;
   givenName: string;
@@ -47,9 +47,32 @@ type MobileLight = {
   }
 }
 
+type MobileThermostat = {
+  device_id: number
+  sensors: {
+    Humidity: number
+    Temperature: {
+      unit: 'F' | 'C'
+      value: number
+    }
+    ThermostatCoolSetpoint: {
+      unit: 'F' | 'C'
+      value: number
+    }
+    ThermostatFanMode: 'AutoLow' | 'ManualLow'
+    ThermostatHeatSetpoint: {
+      unit: 'F' | 'C'
+      value: number
+    }
+    ThermostatMode: 'Auto' | 'Heat' | 'Cool' | 'Off'
+    ThermostatOperatingState: 'Idle'
+  }
+}
+
 type MobileDevices = {
   GATEWAY: object
   "LIGHTS AND SWITCHES": MobileLight[]
+  "THERMOSTATS": MobileThermostat[]
 }
 
 export class DweloAPI {
@@ -93,6 +116,13 @@ export class DweloAPI {
       method: 'POST',
       data: { 'command': 'Multilevel On', 'commandValue': percent.toString() },
     });
+  }
+
+  public async setThermostatMode(id: number, mode: MobileThermostat['sensors']['ThermostatMode']) {
+    return this.request(`/v3/device/${id}/command/`, {
+      method: 'POST',
+      data: { command: mode.toLocaleLowerCase() }
+    })
   }
 
   public async toggleLock(locked: boolean, id: number) {
